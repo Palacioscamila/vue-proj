@@ -16,8 +16,8 @@
 
 
 import axios from 'axios';
-  
-  const client = axios.create({
+import TodoItem from '@/components/TodoItem';
+const client = axios.create({
     baseURL: `${process.env.VUE_APP_GITHUB_ENDPOINT}`,
     headers: {
       'Authorization': `token ${process.env.VUE_APP_GITHUB_TOKEN}`,
@@ -28,43 +28,41 @@ import axios from 'axios';
   
   export default {
     name: 'TodosIssues',
-    data () {
-      return {
-        todo: '',
-        todos: [],
-        issues: []
-      }
+    components: {
+        TodoItem
+    },
+    data() {
+        return {
+            todo: '',
+            todos: [],
+            issues: []
+        }
     },
     methods: {
-      // Gestionar tareas desde aquí
-      addTodo(){
-        this.todos.push(this.todo);
-        this.todo= '';
-      },
-      removeTodo(index){
-        this.todos.splice(index, 1);
-      },
-      // Gestionar los problemas desde aquí
-      closeIssue(index){
-        const target = this.issues[index];
-        client.patch(`/issues/${target.number}`,
-            {
-              state: "closed"
-            },
-          )
-          .then(() => {
-           this.issues.splice(index, 1);
-        })
-      },
-      getIssues() {
-        client.get('issues')
-          .then((res) => {
-            this.issues = res.data
-        })
-      }
+        addTodo() {
+            this.todos.push({ type: 'task', taskName: this.todo });
+            this.todo = '';
+        },
+        removeTodo(index) {
+            this.todos.splice(index, 1);
+        },
+        closeIssue(index) {
+            const target = this.issues[index];
+            client.patch(`/issues/${target.number}`, {
+                state: 'closed'
+            }).then(() => {
+                this.issues.splice(index, 1);
+            });
+        },
+        getIssues() {
+            client.get('issues')
+                .then((res) => {
+                    this.issues = res.data.map(issue => ({ type: 'issue', issueName: issue.title, ...issue }));
+                });
+        }
     },
     created() {
-      this.getIssues();
+        this.getIssues();
     }
-  }
-  </script>
+}
+</script>
